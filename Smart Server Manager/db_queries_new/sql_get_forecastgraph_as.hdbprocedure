@@ -1,0 +1,12 @@
+PROCEDURE "SAP_SRVMGR"."SRVMANAGER::sql_get_forecastgraph_as" ( )
+   LANGUAGE SQLSCRIPT
+   SQL SECURITY INVOKER
+   --DEFAULT SCHEMA <default_schema_name>
+   READS SQL DATA AS
+BEGIN
+   select A."Timestamp",A."NumOfActiveSessions",B."FORECASTVALUE" as "SmoothingForecast", C."FORECASTVALUE" as "LinearRegressionForecast"
+    from "SAP_SRVMGR"."SRVMON_MASTER" as A inner join "SAP_SRVMGR"."SRVMON_FORECASTDATA" as B 
+    on A."Timestamp" = B."FORECASTTIME" and B."METRIC" = 'NumOfActiveSessions' inner join "SAP_SRVMGR"."SRVMON_FORECASTDATA_LR" as C on A."Timestamp" = C."FORECASTTIME" and B."FORECASTTIME" = C."FORECASTTIME" and C."METRIC" = 'NumOfActiveSessions'
+    
+    order by A."Timestamp" asc;
+END

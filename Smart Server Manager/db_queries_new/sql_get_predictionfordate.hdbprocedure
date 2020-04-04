@@ -1,0 +1,23 @@
+PROCEDURE "SAP_SRVMGR"."SRVMANAGER::sql_get_predictionfordate" ( IN refdate timestamp )
+   LANGUAGE SQLSCRIPT
+   SQL SECURITY INVOKER
+   --DEFAULT SCHEMA <default_schema_name>
+  AS
+BEGIN
+DECLARE i INTEGER;
+ 
+    delete from SAP_SRVMGR."SRVMON_HISTORYDATAFORDATE";
+    -- Daily schedules
+    insert into SAP_SRVMGR."SRVMON_HISTORYDATAFORDATE" select 
+        ADD_SECONDS(ADD_SECONDS(ADD_SECONDS((:refdate),SECOND("Timestamp")),MINUTE("Timestamp") * 60) ,HOUR("Timestamp")*60*60) 
+        as "Timestamp","Action","PredictionUsed" from SAP_SRVMGR."SRVMON_HISTORY" 
+        where "Recurrence" = 'Daily';
+    -- Weekly schedules      
+    insert into SAP_SRVMGR."SRVMON_HISTORYDATAFORDATE" select 
+        ADD_SECONDS(ADD_SECONDS(ADD_SECONDS((:refdate),SECOND("Timestamp")),MINUTE("Timestamp") * 60) ,HOUR("Timestamp")*60*60)
+        as "Timestamp","Action","PredictionUsed" from SAP_SRVMGR."SRVMON_HISTORY" 
+        where (MOD(days_between(TO_SECONDDATE(TO_DATE("Timestamp")),TO_SECONDDATE(TO_DATE(:refdate))),7) = 0) and "Recurrence" = 'Weekly';
+     
+    select * from SAP_SRVMGR."SRVMON_HISTORYDATAFORDATE" order by "Timestamp" asc;
+     
+END
